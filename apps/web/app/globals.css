@@ -1,0 +1,374 @@
+@import "tailwindcss";
+@source "../../../packages/ui";
+@source "../../../plugins/audit-log/src/web";
+@source "../../../plugins/document-templates/src/web";
+@source "../../../plugins/integration/src/web";
+@source "../../../plugins/sample-plugin/src/web";
+
+
+
+
+
+
+
+
+@variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   M1: Design System — Color Palette, Typography, Spacing, Shadows, Radius
+   ========================================================================== */
+
+:root {
+  /* Base: Clean White Canvas */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(224 71% 4%);
+
+  /* Surfaces: Layered Elevation */
+  --card: hsl(220 14% 99%);
+  /* --card-header: hsl(220 14% 97%); */ 
+  --card-header: hsl(180, 4%, 95%);
+  --card-foreground: hsl(224 71% 4%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(224 71% 4%);
+
+  /* Primary: Royal Azure — Trust & Reliability */
+  --primary: hsl(221 83% 53%);
+  --primary-foreground: hsl(210 40% 98%);
+
+  /* Secondary: Slate */
+  --secondary: hsl(220 14% 96%);
+  --secondary-foreground: hsl(224 71% 4%);
+
+  /* UI Elements */
+  --muted: hsl(220 14% 96%);
+  --muted-foreground: hsl(220 9% 46%);
+  --accent: hsl(220 14% 96%);
+  --accent-foreground: hsl(224 71% 4%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  /* Borders & Inputs */
+  --border: hsl(220 13% 85%);
+  --input: hsl(220 13% 85%);
+  --input-background: hsl(0 0% 100%);
+  --ring: hsl(221 83% 53%);
+  --radius: 0.5rem;
+
+  /* Status Colors — Harmonized */
+  --success: hsl(142 71% 45%);
+  --success-foreground: hsl(0 0% 100%);
+  --warning: hsl(38 92% 50%);
+  --warning-foreground: hsl(0 0% 100%);
+  --info: hsl(199 89% 48%);
+  --info-foreground: hsl(0 0% 100%);
+
+  /* Sidebar: Professional Navy */
+  --sidebar-background: hsl(222 47% 11%);
+  --sidebar-foreground: hsl(210 40% 96%);
+  --sidebar-primary: hsl(221 83% 53%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(217 33% 17%);
+  --sidebar-accent-foreground: hsl(210 40% 98%);
+  --sidebar-border: hsl(215 25% 21%);
+  --sidebar-ring: hsl(221 83% 53%);
+  --sidebar-muted: hsl(217 33% 17%);
+  --sidebar-muted-foreground: hsl(215 20% 55%);
+
+  /* Shadow System — Consistent Elevation */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Animation Tokens */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark {
+  /* Base: Rich Dark Blue-Black (not pure black) */
+  --background: hsl(224 71% 4%);
+  --foreground: hsl(210 40% 98%);
+
+  /* Surfaces: Elevated Layers */
+  --card: hsl(222 47% 8%);
+  --card-header: hsl(222 47% 9%);
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(222 47% 8%);
+  --popover-foreground: hsl(210 40% 98%);
+
+  /* Primary: Luminous Azure (brighter for dark backgrounds) */
+  --primary: hsl(217 91% 60%);
+  --primary-foreground: hsl(222 47% 8%);
+
+  /* Secondary: Muted Midnight */
+  --secondary: hsl(217 33% 14%);
+  --secondary-foreground: hsl(210 40% 98%);
+
+  /* UI Elements */
+  --muted: hsl(217 33% 14%);
+  --muted-foreground: hsl(215 20% 65%);
+  --accent: hsl(217 33% 14%);
+  --accent-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  /* Borders & Inputs */
+  --border: hsl(217 33% 20%);
+  --input: hsl(217 33% 20%);
+  --input-background: hsl(222 47% 6%);
+  --ring: hsl(217 91% 60%);
+
+  /* Status Colors — Consistent with Light Mode */
+  --success: hsl(142 71% 45%);
+  --success-foreground: hsl(0 0% 100%);
+  --warning: hsl(38 92% 50%);
+  --warning-foreground: hsl(0 0% 100%);
+  --info: hsl(199 89% 48%);
+  --info-foreground: hsl(0 0% 100%);
+
+  /* Sidebar: Deeper Dark */
+  /* --sidebar-background: hsl(230 25% 6%);
+  --sidebar-foreground: hsl(210 40% 96%);
+  --sidebar-primary: hsl(217 91% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(230 25% 12%);
+  --sidebar-accent-foreground: hsl(210 40% 98%);
+  --sidebar-border: hsl(230 20% 22%);
+  --sidebar-ring: hsl(217 91% 60%);
+  --sidebar-muted: hsl(230 25% 12%);
+  --sidebar-muted-foreground: hsl(215 20% 55%); */
+
+  /* Sidebar: Professional Navy */
+  --sidebar-background: hsl(222 47% 11%);
+  --sidebar-foreground: hsl(210 40% 96%);
+  --sidebar-primary: hsl(221 83% 53%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(217 33% 17%);
+  --sidebar-accent-foreground: hsl(210 40% 98%);
+  --sidebar-border: hsl(215 25% 21%);
+  --sidebar-ring: hsl(221 83% 53%);
+  --sidebar-muted: hsl(217 33% 17%);
+  --sidebar-muted-foreground: hsl(215 20% 55%);
+
+  /* Shadows — Deeper for dark mode */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.15);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.35);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+}
+
+@theme {
+  /* ---- Font Family ---- */
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* ---- Color Tokens ---- */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-header: var(--card-header);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Sidebar Colors */
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
+
+  /* ---- Border Radius ---- */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ---- Shadow System (mapped for shadow-* utilities) ---- */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+
+  /* ---- Animation Durations ---- */
+  --duration-fast: var(--duration-fast);
+  --duration-normal: var(--duration-normal);
+  --duration-slow: var(--duration-slow);
+
+  /* ---- Animation Easings ---- */
+  --ease-default: var(--ease-default);
+  --ease-in: var(--ease-in);
+  --ease-out: var(--ease-out);
+  --ease-bounce: var(--ease-bounce);
+
+  /* ---- Typography Scale ---- */
+  --text-tiny: 0.7rem; 
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border);
+  }
+}
+
+html, body {
+  @apply overflow-hidden h-full;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer utilities {
+  /* Scrollbar — Dark surfaces (sidebar, dark cards) */
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Scrollbar — Light surfaces (main content) */
+  .scrollbar-custom-light::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .scrollbar-custom-light::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-custom-light::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+  }
+  .scrollbar-custom-light::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Decorative background grid */
+  .pattern-grid-lg {
+    background-image: linear-gradient(to right, currentColor 1px, transparent 1px),
+      linear-gradient(to bottom, currentColor 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Skeleton shimmer animation */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--muted) 25%,
+      color-mix(in srgb, var(--muted) 50%, transparent) 50%,
+      var(--muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Interactive card hover (elevation lift) */
+  .card-interactive {
+    transition: box-shadow var(--duration-fast) var(--ease-default),
+                transform var(--duration-fast) var(--ease-default);
+  }
+  .card-interactive:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  /* Button press effect */
+  .btn-press:active:not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 50ms;
+  }
+
+  /* Table row hover */
+  .table-row-hover {
+    transition: background-color var(--duration-fast) var(--ease-default);
+  }
+  .table-row-hover:hover td {
+    background-color: var(--accent);
+  }
+
+  /* Sticky table header */
+  .table-sticky-header thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--card);
+  }
+
+  /* Focus visible ring (consistent) */
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* A bar emptying from full to nothing, e.g. the wait until an automatic retry. */
+@keyframes drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}

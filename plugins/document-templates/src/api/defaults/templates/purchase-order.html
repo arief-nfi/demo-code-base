@@ -1,0 +1,82 @@
+<div class="document purchase-order">
+  <div class="header-row">
+    <div class="company-info">
+      {{#if company.logo}}
+      <img src="{{company.logo}}" alt="{{company.name}}" class="company-logo" />
+      {{/if}}
+      <h1 class="company-name">{{company.name}}</h1>
+      <p class="company-details">{{company.address}}</p>
+      {{#if company.phone}}<p class="company-details">{{company.phone}}</p>{{/if}}
+      {{#if company.email}}<p class="company-details">{{company.email}}</p>{{/if}}
+    </div>
+    <div class="document-title">
+      <h2>PURCHASE ORDER</h2>
+      <table class="info-table">
+        <tr><td class="label">PO #:</td><td class="value">{{po.number}}</td></tr>
+        <tr><td class="label">Date:</td><td class="value">{{formatDate po.date}}</td></tr>
+        {{#if po.expectedDelivery}}<tr><td class="label">Expected:</td><td class="value">{{formatDate po.expectedDelivery}}</td></tr>{{/if}}
+      </table>
+    </div>
+  </div>
+
+  <div class="address-row">
+    <div class="vendor-info">
+      <h3>Vendor:</h3>
+      <p class="vendor-name">{{vendor.name}}</p>
+      <p>{{vendor.address}}</p>
+      {{#if vendor.contact}}<p>Attn: {{vendor.contact}}</p>{{/if}}
+    </div>
+    <div class="ship-to">
+      <h3>Ship To:</h3>
+      <p>{{company.name}}</p>
+      <p>{{company.address}}</p>
+    </div>
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="col-num">#</th>
+        <th class="col-name">Description</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-unit">Unit</th>
+        <th class="col-price">Unit Price</th>
+        <th class="col-total">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td class="col-num">{{inc @index}}</td>
+        <td class="col-name">{{this.name}}</td>
+        <td class="col-qty">{{this.quantity}}</td>
+        <td class="col-unit">{{this.unit}}</td>
+        <td class="col-price">{{formatCurrency this.unitPrice ../currency}}</td>
+        <td class="col-total">{{formatCurrency this.total ../currency}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="totals-section">
+    <table class="totals-table">
+      <tr><td class="label">Subtotal:</td><td class="value">{{formatCurrency subtotal currency}}</td></tr>
+      <tr class="grand-total"><td class="label">Total:</td><td class="value">{{formatCurrency total currency}}</td></tr>
+    </table>
+  </div>
+
+  {{#if notes}}
+  <div class="notes">
+    <h3>Special Instructions</h3>
+    <p>{{notes}}</p>
+  </div>
+  {{/if}}
+
+  <div class="signatures">
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <p>Authorized By</p>
+      <p class="sign-date">Date: _______________</p>
+    </div>
+  </div>
+</div>

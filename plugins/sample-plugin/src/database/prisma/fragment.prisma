@@ -1,0 +1,38 @@
+// Plugin fragment for Sample Plugin - do NOT include datasource or generator blocks here
+// This file will be merged into the central schema at build/generate time.
+
+model SampleItem {
+  id          String   @id @default(uuid())
+  name        String
+  value       String?
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdById])
+  @@map("sample_item")
+}
+
+model SampleArticle {
+  id          String               @id @default(uuid())
+  title       String
+  slug        String               @unique
+  body        String
+  status      SampleArticleStatus  @default(DRAFT)
+  publishedAt DateTime?
+  featured    Boolean              @default(false)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([status, createdAt])
+  @@index([featured])
+  @@index([createdById])
+  @@map("sample_article")
+}
+
+enum SampleArticleStatus {
+  DRAFT
+  PUBLISHED
+}

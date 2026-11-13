@@ -1,0 +1,73 @@
+<div class="document credit-note">
+  <div class="header-row">
+    <div class="company-info">
+      {{#if company.logo}}
+      <img src="{{company.logo}}" alt="{{company.name}}" class="company-logo" />
+      {{/if}}
+      <h1 class="company-name">{{company.name}}</h1>
+      <p class="company-details">{{company.address}}</p>
+      {{#if company.phone}}<p class="company-details">{{company.phone}}</p>{{/if}}
+      {{#if company.email}}<p class="company-details">{{company.email}}</p>{{/if}}
+    </div>
+    <div class="document-title">
+      <h2>CREDIT NOTE</h2>
+      <table class="info-table">
+        <tr><td class="label">Credit Note #:</td><td class="value">{{creditNote.number}}</td></tr>
+        <tr><td class="label">Date:</td><td class="value">{{formatDate creditNote.date}}</td></tr>
+        {{#if reference.invoiceNumber}}<tr><td class="label">Ref Invoice:</td><td class="value">{{reference.invoiceNumber}}</td></tr>{{/if}}
+      </table>
+    </div>
+  </div>
+
+  <div class="bill-to">
+    <h3>Credit To:</h3>
+    <p class="customer-name">{{customer.name}}</p>
+    <p>{{customer.address}}</p>
+  </div>
+
+  {{#if creditNote.reason}}
+  <div class="reason">
+    <h3>Reason for Credit</h3>
+    <p>{{creditNote.reason}}</p>
+  </div>
+  {{/if}}
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="col-num">#</th>
+        <th class="col-name">Description</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-price">Unit Price</th>
+        <th class="col-total">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td class="col-num">{{inc @index}}</td>
+        <td class="col-name">{{this.name}}</td>
+        <td class="col-qty">{{this.quantity}}</td>
+        <td class="col-price">{{formatCurrency this.unitPrice ../currency}}</td>
+        <td class="col-total">{{formatCurrency this.total ../currency}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="totals-section">
+    <table class="totals-table">
+      <tr><td class="label">Subtotal:</td><td class="value">{{formatCurrency subtotal currency}}</td></tr>
+      {{#if taxAmount}}<tr><td class="label">Tax:</td><td class="value">{{formatCurrency taxAmount currency}}</td></tr>{{/if}}
+      <tr class="grand-total"><td class="label">Total Credit:</td><td class="value">{{formatCurrency total currency}}</td></tr>
+    </table>
+  </div>
+
+  <div class="signatures">
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <p>Authorized By</p>
+      <p class="sign-date">Date: _______________</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,80 @@
+<div class="document invoice">
+  <div class="header-row">
+    <div class="company-info">
+      {{#if company.logo}}
+      <img src="{{company.logo}}" alt="{{company.name}}" class="company-logo" />
+      {{/if}}
+      <h1 class="company-name">{{company.name}}</h1>
+      <p class="company-details">{{company.address}}</p>
+      {{#if company.phone}}<p class="company-details">{{company.phone}}</p>{{/if}}
+      {{#if company.email}}<p class="company-details">{{company.email}}</p>{{/if}}
+      {{#if company.taxId}}<p class="company-details">Tax ID: {{company.taxId}}</p>{{/if}}
+    </div>
+    <div class="document-title">
+      <h2>INVOICE</h2>
+      <table class="info-table">
+        <tr><td class="label">Invoice #:</td><td class="value">{{invoice.number}}</td></tr>
+        <tr><td class="label">Date:</td><td class="value">{{formatDate invoice.date}}</td></tr>
+        <tr><td class="label">Due Date:</td><td class="value">{{formatDate invoice.dueDate}}</td></tr>
+        {{#if invoice.status}}<tr><td class="label">Status:</td><td class="value status-badge">{{invoice.status}}</td></tr>{{/if}}
+      </table>
+    </div>
+  </div>
+
+  <div class="bill-to">
+    <h3>Bill To:</h3>
+    <p class="customer-name">{{customer.name}}</p>
+    <p>{{customer.address}}</p>
+    {{#if customer.email}}<p>{{customer.email}}</p>{{/if}}
+    {{#if customer.phone}}<p>{{customer.phone}}</p>{{/if}}
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="col-num">#</th>
+        <th class="col-name">Description</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-price">Unit Price</th>
+        <th class="col-total">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td class="col-num">{{inc @index}}</td>
+        <td class="col-name">{{this.name}}</td>
+        <td class="col-qty">{{this.quantity}}</td>
+        <td class="col-price">{{formatCurrency this.unitPrice ../currency}}</td>
+        <td class="col-total">{{formatCurrency this.total ../currency}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="totals-section">
+    <table class="totals-table">
+      <tr><td class="label">Subtotal:</td><td class="value">{{formatCurrency subtotal currency}}</td></tr>
+      {{#if taxRate}}<tr><td class="label">Tax ({{taxRate}}%):</td><td class="value">{{formatCurrency taxAmount currency}}</td></tr>{{/if}}
+      <tr class="grand-total"><td class="label">Total:</td><td class="value">{{formatCurrency total currency}}</td></tr>
+    </table>
+  </div>
+
+  {{#if paymentTerms}}
+  <div class="payment-terms">
+    <h3>Payment Terms</h3>
+    <p>{{paymentTerms}}</p>
+  </div>
+  {{/if}}
+
+  {{#if notes}}
+  <div class="notes">
+    <h3>Notes</h3>
+    <p>{{notes}}</p>
+  </div>
+  {{/if}}
+
+  <div class="footer-text">
+    <p>Thank you for your business!</p>
+  </div>
+</div>

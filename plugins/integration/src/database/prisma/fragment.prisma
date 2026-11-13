@@ -1,0 +1,266 @@
+// Plugin fragment for Integration Plugin - do NOT include datasource or generator blocks here
+// This file will be merged into the central schema at build/generate time.
+
+enum PartnerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+
+  @@map("integration_partner_status")
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
+
+  @@map("integration_webhook_delivery_status")
+}
+
+model IntegrationPartner {
+  id           String        @id @default(uuid())
+  code         String        @unique
+  name         String
+  description  String?
+  contactName  String?
+  contactEmail String?
+  status       PartnerStatus @default(ACTIVE)
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  apiKeys  IntegrationApiKey[]
+  webhooks IntegrationWebhook[]
+
+  @@map("integration_partner")
+}
+
+model IntegrationWebhookEvent {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String
+  description   String?
+  category      String?
+  payloadSchema Json?
+  samplePayload Json?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  webhooks IntegrationWebhook[]
+
+  @@map("integration_webhook_event")
+}
+
+model IntegrationWebhook {
+  id          String   @id @default(uuid())
+  partnerId   String
+  eventId     String
+  url         String
+  description String?
+  secret      String
+  headers     Json?
+  isActive    Boolean  @default(true)
+  retryPolicy Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  partner    IntegrationPartner      @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  event      IntegrationWebhookEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deliveries IntegrationWebhookDelivery[]
+
+  @@unique([partnerId, eventId, url])
+  @@map("integration_webhook")
+}
+
+model IntegrationApiKey {
+  id         String    @id @default(uuid())
+  partnerId  String
+  name       String
+  keyPrefix  String
+  keyHash    String
+  scopes     Json      @default("[]")
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  isActive   Boolean   @default(true)
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  partner IntegrationPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@map("integration_api_key")
+}
+
+model IntegrationWebhookDelivery {
+  id           String                @id @default(uuid())
+  webhookId    String
+  eventCode    String
+  payload      Json
+  status       WebhookDeliveryStatus @default(PENDING)
+  httpStatus   Int?
+  responseBody String?
+  attempt      Int                   @default(1)
+  maxAttempts  Int                   @default(3)
+  nextRetryAt  DateTime?
+  error        String?
+  duration     Int?
+  createdAt    DateTime              @default(now())
+  completedAt  DateTime?
+
+  webhook IntegrationWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId, createdAt])
+  @@index([status, nextRetryAt])
+  @@map("integration_webhook_delivery")
+}
+
+// ─── Google Calendar ──────────────────────────────────────────
+
+enum CalendarConnectionStatus {
+  CONNECTED
+  NEEDS_RECONNECT
+  DISCONNECTED
+
+  @@map("integration_calendar_connection_status")
+}
+
+enum CalendarLinkStatus {
+  PENDING
+  SYNCED
+  FAILED
+  REMOVED
+
+  @@map("integration_calendar_link_status")
+}
+
+/// One user's link to their calendar account (tenant schema)
+model CalendarConnection {
+  id                String                   @id @default(uuid())
+  userId            String                   @unique
+  provider          String                   @default("google")
+  /// The account's stable id at the provider (Google `sub`)
+  externalAccountId String
+  accountEmail      String
+  /// secretBox-sealed OAuth refresh token
+  refreshTokenEnc   String                   @db.Text
+  scopes            String
+  /// The app-owned calendar created in the user's account
+  calendarId        String?
+  calendarName      String?
+  status            CalendarConnectionStatus @default(CONNECTED)
+  lastError         String?
+  connectedAt       DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  @@map("integration_calendar_connection")
+}
+
+/// The requested state of one synced event and its event at the provider (tenant schema)
+model CalendarEventLink {
+  id              String             @id @default(uuid())
+  userId          String
+  source          String
+  key             String
+  externalEventId String
+  /// The normalized event to apply; null = remove it
+  desired         Json?
+  status          CalendarLinkStatus @default(PENDING)
+  attempts        Int                @default(0)
+  lastError       String?
+  syncedAt        DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@unique([userId, source, key])
+  @@index([status])
+  @@index([userId])
+  @@map("integration_calendar_event_link")
+}
+
+/// Which tenant users share one provider account, so revoking access for one doesn't
+/// cut off the others (public schema only)
+model CalendarAccountIndex {
+  id                String   @id @default(uuid())
+  externalAccountId String
+  tenantSlug        String
+  userId            String
+  createdAt         DateTime @default(now())
+
+  @@unique([tenantSlug, userId])
+  @@index([externalAccountId])
+  @@map("integration_calendar_account_index")
+}
+
+// ─── Google Meet ──────────────────────────────────────────────
+
+enum MeetingAccessType {
+  TRUSTED
+  OPEN
+  RESTRICTED
+
+  @@map("integration_meeting_access_type")
+}
+
+enum MeetingSpaceStatus {
+  ACTIVE
+  CANCELLED
+  ORPHANED
+
+  @@map("integration_meeting_space_status")
+}
+
+enum MeetingLockState {
+  OPEN
+  LOCKED
+  PENDING
+  FAILED
+
+  @@map("integration_meeting_lock_state")
+}
+
+/// One item's meeting (source + key), with a short-lived claim so concurrent creates make one space (tenant schema)
+model MeetingItem {
+  id             String         @id @default(uuid())
+  source         String
+  key            String
+  title          String?
+  /// The meeting currently used for the item (plain id: no second relation)
+  currentSpaceId String?
+  /// Set while a request is creating the item's meeting; older than a minute = abandoned
+  creatingSince  DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  spaces MeetingSpace[]
+
+  @@unique([source, key])
+  @@map("integration_meeting_item")
+}
+
+/// One meeting at the provider (a Google Meet space), kept after it is replaced or cancelled (tenant schema)
+model MeetingSpace {
+  id            String             @id @default(uuid())
+  itemId        String
+  hostUserId    String
+  /// The provider account that owns the space (Google `sub`)
+  hostAccountId String
+  provider      String             @default("google")
+  /// `spaces/{id}`; the meeting code is never stored
+  spaceName     String
+  joinUrl       String
+  access        MeetingAccessType
+  status        MeetingSpaceStatus @default(ACTIVE)
+  lockState     MeetingLockState   @default(OPEN)
+  lastError     String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  item MeetingItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([hostUserId, status])
+  @@index([lockState])
+  @@map("integration_meeting_space")
+}

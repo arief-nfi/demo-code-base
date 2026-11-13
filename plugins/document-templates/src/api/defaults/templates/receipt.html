@@ -1,0 +1,60 @@
+<div class="document receipt">
+  <div class="header-center">
+    {{#if company.logo}}
+    <img src="{{company.logo}}" alt="{{company.name}}" class="company-logo" />
+    {{/if}}
+    <h1 class="company-name">{{company.name}}</h1>
+    <p class="company-details">{{company.address}}</p>
+    {{#if company.phone}}<p class="company-details">{{company.phone}}</p>{{/if}}
+  </div>
+
+  <div class="receipt-divider"></div>
+
+  <h2 class="receipt-title">RECEIPT</h2>
+
+  <table class="receipt-info">
+    <tr><td class="label">Receipt #:</td><td>{{receipt.number}}</td></tr>
+    <tr><td class="label">Date:</td><td>{{formatDate receipt.date}}</td></tr>
+    {{#if customer.name}}<tr><td class="label">Customer:</td><td>{{customer.name}}</td></tr>{{/if}}
+    <tr><td class="label">Payment:</td><td>{{receipt.paymentMethod}}</td></tr>
+    {{#if receipt.referenceNumber}}<tr><td class="label">Ref #:</td><td>{{receipt.referenceNumber}}</td></tr>{{/if}}
+  </table>
+
+  <div class="receipt-divider"></div>
+
+  <table class="items-table receipt-items">
+    <thead>
+      <tr>
+        <th class="col-name">Item</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-price">Price</th>
+        <th class="col-total">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td class="col-name">{{this.name}}</td>
+        <td class="col-qty">{{this.quantity}}</td>
+        <td class="col-price">{{formatCurrency this.unitPrice ../currency}}</td>
+        <td class="col-total">{{formatCurrency this.total ../currency}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="receipt-divider"></div>
+
+  <table class="totals-table receipt-totals">
+    <tr><td class="label">Subtotal:</td><td class="value">{{formatCurrency subtotal currency}}</td></tr>
+    {{#if taxAmount}}<tr><td class="label">Tax:</td><td class="value">{{formatCurrency taxAmount currency}}</td></tr>{{/if}}
+    <tr class="grand-total"><td class="label">Total:</td><td class="value">{{formatCurrency total currency}}</td></tr>
+  </table>
+
+  <div class="receipt-divider"></div>
+
+  <div class="footer-text">
+    <p>Thank you for your purchase!</p>
+    {{#if company.website}}<p>{{company.website}}</p>{{/if}}
+  </div>
+</div>

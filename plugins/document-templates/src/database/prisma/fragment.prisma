@@ -1,0 +1,70 @@
+// Plugin fragment for Document Templates - do NOT include datasource or generator blocks here
+// This file will be merged into the central schema at build/generate time.
+
+model DocumentTemplate {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  category     String
+
+  htmlContent  String   @db.Text
+  cssContent   String?  @db.Text
+  headerHtml   String?  @db.Text
+  footerHtml   String?  @db.Text
+
+  paperSize    String   @default("A4")
+  orientation  String   @default("portrait")
+  marginTop    String   @default("20mm")
+  marginBottom String   @default("20mm")
+  marginLeft   String   @default("15mm")
+  marginRight  String   @default("15mm")
+
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  version      Int      @default(1)
+  sampleData   String?  @db.Text
+
+  renders      DocumentRender[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?
+  updatedBy    String?
+
+  @@map("document_template")
+}
+
+model DocumentRender {
+  id           String   @id @default(uuid())
+  templateId   String
+  template     DocumentTemplate @relation(fields: [templateId], references: [id])
+  outputFormat String
+  filePath     String?
+  fileSize     Int?
+  sourceModule String?
+  sourceId     String?
+  status       String   @default("pending")
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  createdBy    String?
+
+  @@map("document_render")
+}
+
+// A tenant's edit of an email a plugin or core declares (one per key and language)
+model EmailTemplate {
+  id        String   @id @default(uuid())
+  key       String
+  locale    String
+  subject   String
+  html      String   @db.Text
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@unique([key, locale])
+  @@map("email_template")
+}

@@ -1,0 +1,72 @@
+<div class="document delivery-note">
+  <div class="header-row">
+    <div class="company-info">
+      {{#if company.logo}}
+      <img src="{{company.logo}}" alt="{{company.name}}" class="company-logo" />
+      {{/if}}
+      <h1 class="company-name">{{company.name}}</h1>
+      <p class="company-details">{{company.address}}</p>
+      {{#if company.phone}}<p class="company-details">{{company.phone}}</p>{{/if}}
+    </div>
+    <div class="document-title">
+      <h2>DELIVERY NOTE</h2>
+      <table class="info-table">
+        <tr><td class="label">DN #:</td><td class="value">{{delivery.number}}</td></tr>
+        <tr><td class="label">Date:</td><td class="value">{{formatDate delivery.date}}</td></tr>
+        {{#if reference.poNumber}}<tr><td class="label">PO Ref:</td><td class="value">{{reference.poNumber}}</td></tr>{{/if}}
+        {{#if reference.invoiceNumber}}<tr><td class="label">Invoice Ref:</td><td class="value">{{reference.invoiceNumber}}</td></tr>{{/if}}
+      </table>
+    </div>
+  </div>
+
+  <div class="address-row">
+    <div class="deliver-to">
+      <h3>Deliver To:</h3>
+      <p class="customer-name">{{recipient.name}}</p>
+      <p>{{delivery.address}}</p>
+    </div>
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="col-num">#</th>
+        <th class="col-name">Item Description</th>
+        <th class="col-qty">Quantity</th>
+        <th class="col-unit">Unit</th>
+        <th class="col-check">Received</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td class="col-num">{{inc @index}}</td>
+        <td class="col-name">{{this.name}}</td>
+        <td class="col-qty">{{this.quantity}}</td>
+        <td class="col-unit">{{this.unit}}</td>
+        <td class="col-check">&square;</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  {{#if notes}}
+  <div class="notes">
+    <h3>Notes</h3>
+    <p>{{notes}}</p>
+  </div>
+  {{/if}}
+
+  <div class="signatures">
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <p>Delivered By</p>
+      <p class="sign-date">Date: _______________</p>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <p>Received By</p>
+      <p class="sign-date">Date: _______________</p>
+    </div>
+  </div>
+</div>

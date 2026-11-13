@@ -1,0 +1,49 @@
+{
+  "name": "saas-multitenant-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "bootstrap": "pnpm install && pnpm db:migrate:deploy && pnpm build && pnpm db:seed && pnpm db:migrate:tenants",
+    "build": "turbo run build",
+    "dev": "turbo run dev dev:watch",
+    "dev:watch": "node scripts/dev-watch.js",
+    "lint": "turbo run lint",
+    "plugin:new": "node scripts/generate-plugin.js",
+    "plugin:dev": "node scripts/plugin-dev.js",
+    "plugins:register": "node scripts/generate-registry.js",
+    "plugins:watch": "node scripts/plugin-dev.js --watch-only",
+    "plugins:merge-prisma": "node scripts/merge-prisma-schemas.js",
+    "plugins:merge-prisma:check": "node scripts/merge-prisma-schemas.js --check",
+    "test": "turbo run test test:scripts",
+    "test:scripts": "node --test scripts/__tests__/*.test.js",
+    "test:api": "pnpm --filter api test",
+    "test:ui": "pnpm --filter @saas/ui test",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:generate": "pnpm --filter @saas/database db:generate",
+    "db:migrate:dev": "pnpm --filter @saas/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @saas/database db:migrate:deploy",
+    "db:migrate:status": "pnpm --filter @saas/database db:migrate:status",
+    "db:studio": "pnpm --filter @saas/database db:studio",
+    "db:seed": "pnpm --filter api exec ts-node src/seed.ts",
+    "db:migrate:tenants": "node scripts/migrate-all-tenants.js"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "prettier": "latest",
+    "semver": "^7.7.4",
+    "turbo": "latest",
+    "typescript": "latest"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "next@16.0.4": "patches/next@16.0.4.patch"
+    }
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
+  }
+}

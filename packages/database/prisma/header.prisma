@@ -1,0 +1,642 @@
+// Central header for merged Prisma schema
+// Contains datasource and generator. Plugin fragments should NOT include these blocks.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // Generate client into packages/database's node_modules so apps can import centrally
+  output   = "../generated/client"
+}
+
+model Tenant {
+  id                  String       @id @default(uuid())
+  name                String
+  slug                String       @unique
+  status              TenantStatus @default(ACTIVE)
+  config              TenantConfig?
+
+  // Lifecycle
+  trialEndsAt         DateTime?
+  suspendedAt         DateTime?
+  suspendedReason     String?
+  terminatedAt        DateTime?
+  terminationDate     DateTime?
+  onboardingCompleted Boolean      @default(true)
+
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+}
+
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+  TRIAL
+  SUSPENDED
+  PENDING
+  TERMINATED
+}
+
+model User {
+  id                    String   @id @default(uuid())
+  email                 String   @unique
+  username              String   @unique
+  password              String
+  name                  String?
+  avatar                String?
+  status                UserStatus @default(ACTIVE)
+  resetPasswordToken    String?  @unique
+  resetPasswordExpires  DateTime?
+  refreshTokenHash      String?
+  refreshTokenExpiresAt DateTime?
+  roles                 Role[]
+  auditLogs             AuditLog[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  users       User[]
+  permissions Permission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  roles       Role[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Plugin {
+  id          String    @id @default(uuid())
+  name        String
+  key         String    @unique
+  description String?
+  version     String?
+  authorName  String?
+  authorEmail String?
+  authorUrl   String?
+  isEnabled   Boolean   @default(false)
+  config      Json?
+  installedAt DateTime?
+  activatedAt DateTime?
+
+  // Pricing (set by sysadmin on public schema)
+  pricingModel  PricingModel @default(FREE)
+  price         Decimal?     @db.Decimal(10,2)
+  pricingCurrency String     @default("USD")
+  trialDays     Int          @default(0)
+  pricingLabel  String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// Apps: bundles of plugins sold at their own price (public schema, sysadmin-managed)
+// ──────────────────────────────────────────────
+
+model App {
+  id              String       @id @default(uuid())
+  key             String       @unique
+  name            String
+  description     String?
+  icon            String       @default("package")
+  /// On sale in the marketplace. Hidden apps keep renewing for tenants who have them.
+  isPublished     Boolean      @default(false)
+  pricingModel    PricingModel @default(FREE)
+  price           Decimal?     @db.Decimal(10,2)
+  pricingCurrency String       @default("USD")
+  trialDays       Int          @default(0)
+  pricingLabel    String?
+  plugins         AppPlugin[]
+  /// Plugins added to the app that couldn't be switched on for a subscriber: [{ tenantSlug, pluginKey, error, at }]
+  switchOnFailures Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model AppPlugin {
+  // A plain id like every other model: the audit middleware reads `id` before batch deletes
+  id        String @id @default(uuid())
+  appId     String
+  pluginKey String
+  position  Int
+  app       App    @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, pluginKey])
+  @@index([pluginKey])
+}
+
+// ──────────────────────────────────────────────
+// Workflow Templates (public schema, sysadmin-managed)
+// ──────────────────────────────────────────────
+
+model WorkflowTemplate {
+  id          String                 @id @default(uuid())
+  name        String
+  category    String
+  description String?
+  isActive    Boolean                @default(true)
+  steps       WorkflowTemplateStep[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@unique([category, name])
+  @@map("workflow_template")
+}
+
+model WorkflowTemplateStep {
+  id          String           @id @default(uuid())
+  templateId  String
+  template    WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  state       String
+  label       String
+  sortOrder   Int
+  isMandatory Boolean          @default(false)
+  permissions String[]
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+
+  @@unique([templateId, state])
+  @@index([templateId, sortOrder])
+  @@map("workflow_template_step")
+}
+
+model TenantConfig {
+  id          String   @id @default(uuid())
+  tenantId    String   @unique
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  description String?
+  logo        String?
+  domain      String?  @unique
+  
+  // Appearance
+  theme       Theme    @default(LIGHT)
+  icon        String?
+
+  // Custom Colors
+  primaryColor       String?
+  accentColor        String?
+  sidebarBackground  String?
+  sidebarForeground  String?
+
+  // Localization
+  language    Language @default(ENGLISH)
+  currency    Currency @default(USD)
+  
+  timezone    String   @default("UTC")
+  dateFormat  String   @default("YYYY-MM-DD")
+  timeFormat  String   @default("HH:mm:ss")
+  
+  numberFormat String?
+  currencyFormat String?
+
+  // Email sender settings (address is always the platform's MAIL_FROM)
+  emailSenderName String?
+  emailReplyTo    String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Language {
+  ENGLISH
+  INDONESIA
+}
+
+enum Currency {
+  USD
+  IDR
+}
+
+enum Theme {
+  LIGHT
+  DARK
+}
+
+enum PricingModel {
+  FREE
+  MONTHLY
+  YEARLY
+  ONE_TIME
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIAL
+  PENDING_APPROVAL
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+  // Billing lifecycle (PENDING_APPROVAL / EXPIRED / CANCELLED / SUSPENDED are legacy, migrated by the billing job)
+  PENDING_PAYMENT
+  PAST_DUE
+  PAUSED
+  ENDED
+}
+
+model TenantSubscription {
+  id               String             @id @default(uuid())
+  /// Product key: a plugin key, or `app:<appKey>` for an app.
+  pluginKey        String             @unique
+  status           SubscriptionStatus @default(ACTIVE)
+  pricingModel     String
+  price            Decimal?           @db.Decimal(10,2)
+  currency         String             @default("USD")
+  startDate        DateTime           @default(now())
+  endDate          DateTime?
+  trialEndsAt      DateTime?
+  cancelledAt      DateTime?
+  lastPaymentDate  DateTime?
+  nextPaymentDate  DateTime?
+  paymentReference String?
+  subscribedBy     String?
+  approvedBy       String?
+  approvedAt       DateTime?
+
+  // Billing lifecycle
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+  pastDueAt          DateTime?
+  pausedAt           DateTime?
+  endedAt            DateTime?
+  /// App subscriptions only: the plugins this subscription grants (refreshed when an invoice for it is paid).
+  grantedPlugins     String[]  @default([])
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@map("tenant_subscription")
+}
+
+// ──────────────────────────────────────────────
+// Billing (public schema, keyed by tenantId)
+// ──────────────────────────────────────────────
+
+enum InvoiceStatus {
+  OPEN
+  PAID
+  VOID
+}
+
+enum InvoiceKind {
+  FIRST
+  RENEWAL
+  TRIAL_CONVERSION
+  ONE_TIME
+}
+
+enum CheckoutStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
+
+model BillingSettings {
+  id                 String   @id @default("default")
+  taxEnabled         Boolean  @default(false)
+  taxName            String   @default("PPN")
+  taxRate            Decimal  @default(11) @db.Decimal(5,2)
+  renewalLeadDays    Int      @default(7)
+  graceDays          Int      @default(7)
+  checkoutValidHours Int      @default(24)
+  sellerName         String?
+  sellerAddress      String?
+  sellerTaxId        String?
+  sellerEmail        String?
+  updatedAt          DateTime @updatedAt
+}
+
+model BillingProfile {
+  tenantId     String   @id
+  companyName  String?
+  billingEmail String?
+  address      String?
+  taxId        String?
+  updatedAt    DateTime @updatedAt
+}
+
+model InvoiceCounter {
+  year Int @id
+  last Int @default(0)
+}
+
+model Invoice {
+  id               String        @id @default(uuid())
+  number           String        @unique
+  dedupeKey        String        @unique
+  tenantId         String
+  tenantSlug       String
+  /// Product key: a plugin key, or `app:<appKey>` for an app.
+  pluginKey        String
+  pluginName       String
+  kind             InvoiceKind
+  pricingModel     String
+  periodStart      DateTime?
+  periodEnd        DateTime?
+  currency         String
+  subtotal         Decimal       @db.Decimal(12,2)
+  taxName          String?
+  taxRate          Decimal?      @db.Decimal(5,2)
+  taxAmount        Decimal       @default(0) @db.Decimal(12,2)
+  /// Credit from the tenant's balance taken off before tax.
+  creditAmount     Decimal       @default(0) @db.Decimal(12,2)
+  total            Decimal       @db.Decimal(12,2)
+  status           InvoiceStatus @default(OPEN)
+  issuedAt         DateTime      @default(now())
+  dueAt            DateTime
+  paidAt           DateTime?
+  voidedAt         DateTime?
+  paymentProvider  String?
+  paymentMethod    String?
+  paymentReference String?
+  complimentary    Boolean       @default(false)
+  activationError  String?
+  /// App invoices: the plugins included at issue, [{ key, name }].
+  includes         Json?
+  sellerSnapshot   Json
+  billToSnapshot   Json
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([tenantId, status])
+  @@index([status, dueAt])
+}
+
+enum BillingCreditKind {
+  GRANT
+  USE
+  RESTORE
+}
+
+/// A tenant's credit, as entries: GRANT and RESTORE positive, USE negative. Balance = sum per tenant and currency.
+model BillingCredit {
+  id        String            @id @default(uuid())
+  tenantId  String
+  currency  String
+  kind      BillingCreditKind
+  amount    Decimal           @db.Decimal(12,2)
+  reason    String
+  /// GRANT: the product key whose unused time created it.
+  sourceKey String?
+  /// USE: the invoice that used it; RESTORE: the invoice whose void gave it back.
+  invoiceId String?
+  createdAt DateTime          @default(now())
+
+  @@index([tenantId, currency])
+  @@index([invoiceId])
+}
+
+model PaymentCheckout {
+  id          String         @id @default(uuid())
+  invoiceId   String
+  provider    String
+  externalId  String         @unique
+  url         String
+  status      CheckoutStatus @default(PENDING)
+  expiresAt   DateTime
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+
+  @@index([invoiceId])
+}
+
+model File {
+  id          String   @id @default(uuid())
+  filename    String
+  storageKey  String   @unique
+  mimeType    String
+  size        Int
+  category    String
+  uploadedBy  String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([uploadedBy])
+  @@map("file")
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  ACTION
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  userId      String
+  title       String
+  body        String
+  type        NotificationType @default(INFO)
+  read        Boolean          @default(false)
+  link        String?
+  category    String           @default("system")
+  sourceEvent String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
+  @@map("notification")
+}
+
+model NotificationPreference {
+  id       String  @id @default(uuid())
+  userId   String
+  category String
+  inApp    Boolean @default(true)
+  email    Boolean @default(false)
+
+  @@unique([userId, category])
+  @@map("notification_preference")
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+// One row per email sent: tenant-scope emails in the tenant schema, platform emails in public
+model EmailMessage {
+  id                String      @id @default(uuid())
+  tenantSlug        String?
+  templateKey       String
+  source            String
+  locale            String
+  to                String[]
+  from              String
+  replyTo           String?
+  subject           String
+  html              String      @db.Text
+  text              String      @db.Text
+  redacted          Boolean     @default(false)
+  isTest            Boolean     @default(false)
+  note              String?
+  status            EmailStatus @default(QUEUED)
+  attempts          Int         @default(0)
+  lastError         String?
+  providerMessageId String?
+  idempotencyKey    String?     @unique
+  createdAt         DateTime    @default(now())
+  // When it was last put on the queue (a retry re-queues it): rows QUEUED for long were lost
+  queuedAt          DateTime    @default(now())
+  sentAt            DateTime?
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([status, queuedAt])
+  // A workspace log reads the platform emails sent for it from public
+  @@index([tenantSlug, createdAt])
+  @@map("email_message")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  tenantSlug    String?  //@map("tenantSlug")
+  userId        String?  //@map("user_id")
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action        String   // CREATE, UPDATE, DELETE, READ
+  entity        String   // Model name (e.g., "User", "Project")
+  entityId      String   //@map("entity_id")
+
+  changes       Json?    // Store before/after values
+  metadata      Json?    // Additional context (IP, user agent, etc.)
+
+  // Hash chain for tamper evidence
+  previousHash  String?  // Hash of the previous audit entry (null for genesis/chain-reset)
+  hash          String?  // SHA-256 hash of this entry's content + previousHash
+
+  timestamp     DateTime @default(now())
+
+  @@index([tenantSlug, timestamp])
+  @@index([userId, timestamp])
+  @@index([entity, entityId])
+  @@index([action])
+  //@@map("audit_logs")
+}
+
+model AuditConfig {
+  id              String   @id @default(uuid())
+  sensitiveFields Json     @default("{\"*\": [\"password\", \"refreshToken\", \"refreshTokenHash\", \"refreshTokenExpiresAt\", \"resetPasswordToken\", \"resetPasswordExpires\", \"secret\", \"token\", \"apiKey\", \"apiSecret\", \"secretKey\"]}")
+  ignoredFields   Json     @default("{\"*\": [\"createdAt\", \"updatedAt\"]}")
+  entityFilter    Json?
+  retentionPolicy Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ──────────────────────────────────────────────
+// Workflow Engine
+// ──────────────────────────────────────────────
+
+model WorkflowProcess {
+  id          String         @id @default(uuid())
+  pluginKey   String
+  processKey  String
+  name        String
+  description String?
+  steps       WorkflowStep[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([pluginKey, processKey])
+  @@map("workflow_process")
+}
+
+model WorkflowStep {
+  id          String          @id @default(uuid())
+  processId   String
+  process     WorkflowProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+  state       String
+  label       String
+  sortOrder   Int
+  isActive    Boolean         @default(true)
+  isMandatory Boolean         @default(false)
+  permissions String[]
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([processId, state])
+  @@index([processId, sortOrder])
+  @@map("workflow_step")
+}
+
+model WorkflowTransition {
+  id          String   @id @default(uuid())
+  processKey  String
+  entityType  String
+  entityId    String
+  fromState   String
+  toState     String
+  action      String   @default("advance")
+  userId      String
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@index([processKey, entityId])
+  @@index([entityType, entityId, createdAt])
+  @@map("workflow_transition")
+}
+
+// ──────────────────────────────────────────────
+// Data Import
+// ──────────────────────────────────────────────
+
+model ImportJob {
+  id              String       @id @default(uuid())
+  importKey       String
+  fileName        String
+  fileSize        Int
+  status          ImportStatus @default(PENDING)
+  totalRows       Int          @default(0)
+  importedRows    Int          @default(0)
+  skippedRows     Int          @default(0)
+  failedRows      Int          @default(0)
+  duplicateAction String       @default("skip")
+  errorLog        Json?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  userId          String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([importKey, createdAt])
+  @@map("import_job")
+}
+
+enum ImportStatus {
+  PENDING
+  VALIDATING
+  VALIDATED
+  IMPORTING
+  COMPLETED
+  FAILED
+  CANCELLED
+}

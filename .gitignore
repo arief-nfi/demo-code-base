@@ -1,0 +1,20 @@
+node_modules
+backups
+dist
+.next
+.turbo
+.env
+# Personal overrides (Next.js loads apps/web/.env*.local); shared settings belong in the root .env
+.env*.local
+*.log
+apps/api/uploads/
+.plugin-registry-cache.json
+
+# Local-only infrastructure (PostgreSQL + Redis via docker compose)
+/infra/
+
+# Dev watcher state (API reload stamp)
+/.dev-watch/
+
+# Claude Code superpowers scratch (brainstorm companion, plan ledgers)
+/.superpowers/
